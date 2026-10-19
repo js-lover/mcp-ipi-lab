@@ -1,0 +1,30 @@
+{
+  "backend": "ollama",
+  "model": "qwen2.5:3b",
+  "temperature": 0.0,
+  "trials_per_cell": 15,
+  "cells": 48,
+  "total_trials": 720,
+  "defenses": [
+    "d0_none",
+    "d1_spotlight",
+    "d2_declarative",
+    "d3_intent",
+    "d4_anomaly",
+    "d3_intent+d4_anomaly"
+  ],
+  "payloads": [
+    "none(kontrol)",
+    "v1_naive",
+    "v2_authority",
+    "v3_delimiter",
+    "v4_obfuscated",
+    "v5_natural",
+    "v6_prerequisite",
+    "v7_directive_field"
+  ],
+  "started": "2026-10-16T17:20:59+03:00",
+  "finished": "2026-10-16T18:10:51+03:00",
+  "duration_sec": 2992.6,
+  "interrupted": false
+}

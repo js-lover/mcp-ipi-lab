@@ -1,0 +1,3 @@
+# Harness (mock + ollama + openai) için HARİCİ BAĞIMLILIK YOK — saf stdlib.
+# Aşağıdakiler yalnızca OPSİYONEL gerçek MCP server (mcp_server/server.py) için:
+mcp[cli]>=1.2.0
