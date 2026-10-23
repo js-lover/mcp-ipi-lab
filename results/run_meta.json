@@ -1,10 +1,10 @@
 {
   "backend": "ollama",
-  "model": "qwen2.5:3b",
+  "model": "qwen2.5:7b",
   "temperature": 0.0,
-  "trials_per_cell": 15,
+  "trials_per_cell": 10,
   "cells": 48,
-  "total_trials": 720,
+  "total_trials": 480,
   "defenses": [
     "d0_none",
     "d1_spotlight",
@@ -23,8 +23,8 @@
     "v6_prerequisite",
     "v7_directive_field"
   ],
-  "started": "2026-10-16T17:20:59+03:00",
-  "finished": "2026-10-16T18:10:51+03:00",
-  "duration_sec": 2992.6,
+  "started": "2026-10-23T21:15:18+03:00",
+  "finished": "2026-10-23T21:59:05+03:00",
+  "duration_sec": 2627.5,
   "interrupted": false
 }

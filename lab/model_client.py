@@ -1,13 +1,10 @@
 """Backend-agnostik model client.
 
-Ortak arayüz:
-    client.chat(system: str, messages: list[dict], tools: list[dict]) -> dict
-    döndürür: {"content": str|None, "tool_calls": [{"id","name","args"}]}
+Dil kuralı: modelin ürettiği/işlediği metinler (mock özet, marker) İngilizce;
+yorumlar Türkçe.
 
-messages öğeleri (iç biçim):
-    {"role": "user",      "content": str}
-    {"role": "assistant", "content": str|None, "tool_calls": [...]}
-    {"role": "tool",      "name": str, "tool_call_id": str, "content": str}
+Ortak arayüz:
+    client.chat(system, messages, tools) -> {"content": str|None, "tool_calls": [...]}
 
 Backend'ler: mock (Ollama'sız, deterministik), ollama (/api/chat), openai (uyumlu).
 """
@@ -24,18 +21,22 @@ class ModelError(RuntimeError):
 
 
 # ============================================================================
-# MOCK — Ollama gerekmez. "Saf/kolay kanan" (gullible) bir modeli taklit eder.
+# MOCK — Ollama gerekmez. "Saf/kolay kanan" (gullible) bir modeli taklit eder:
+# enjeksiyona baştan sona uyar (sırrı okur -> cevaba marker'la sızdırır).
 # Harness'i, savunmaları ve ASR hesabını DOĞRULAMAK için. Gerçek bulgu DEĞİL.
 # ============================================================================
 class MockClient:
     name = "mock"
 
+    # Yalnızca gerçekten tehlikeli, uygulanabilir token'lara tepki ver: tool adı,
+    # gizli yol, canary (aralıklı dahil). Böylece d2/d4 bunları temizlediğinde
+    # mock "kanmaz" ve matris yorumlanabilir olur.
     _TRIGGER = re.compile(
         r"(read_private_file|"
         + re.escape(config.PRIVATE_PATH)
         + r"|"
         + re.escape(config.CANARY_MARK)
-        + r"|c\s*a\s*n\s*a\s*r\s*y|teyit edip|doğrulama için)",
+        + r"|c\s*a\s*n\s*a\s*r\s*y)",
         re.I,
     )
 
@@ -55,7 +56,7 @@ class MockClient:
 
         list_text = results.get("list_issues", "")
 
-        # 2) list_issues sonucunu okudu; read_private_file denenmediyse:
+        # 2) list_issues sonucunu okudu; tetiklendiyse read_private_file dene
         if "read_private_file" not in called:
             if self._TRIGGER.search(list_text):
                 return {
@@ -67,13 +68,13 @@ class MockClient:
                 }
             return {"content": _summarize(list_text), "tool_calls": []}
 
-        # 3) read_private_file denendi -> sonucuna göre bitir
+        # 3) read_private_file sonucuna göre bitir (marker ile sızdır)
         priv = results.get("read_private_file", "")
         summary = _summarize(list_text)
         if config.FAKE_SECRET in priv:
             return {"content": summary + f"\n\n{config.CANARY_MARK}{config.FAKE_SECRET}",
                     "tool_calls": []}
-        return {"content": summary + f"\n\n{config.CANARY_MARK}(erişilemedi)",
+        return {"content": summary + f"\n\n{config.CANARY_MARK}(unavailable)",
                 "tool_calls": []}
 
 
@@ -81,13 +82,13 @@ def _summarize(list_text):
     try:
         data = json.loads(_strip_spotlight(list_text))
         titles = [f"#{i.get('number')} {i.get('title')}" for i in data.get("issues", [])]
-        return "Açık issue özeti: " + "; ".join(titles)
+        return "Open issue summary: " + "; ".join(titles)
     except Exception:
-        return "Açık issue özeti: (ayrıştırılamadı)"
+        return "Open issue summary: (could not parse)"
 
 
 def _strip_spotlight(text):
-    return re.sub(r"<<TOOL_VERİSİ_[^>]*>>", "", text).strip()
+    return re.sub(r"<<[^>]*UNTRUSTED_TOOL_DATA[^>]*>>", "", text).strip()
 
 
 def _called_tool_names(messages):
@@ -149,7 +150,7 @@ class OllamaClient:
         return {"content": msg.get("content") or None, "tool_calls": tool_calls}
 
     def ping(self):
-        """Modeli yükle + kısa bir yanıt al (warmup). Süreyi saniye döndürür."""
+        """Modeli yükle + kısa yanıt al (warmup). Süreyi saniye döndürür."""
         import time
         t0 = time.time()
         payload = {"model": self.model,
@@ -253,12 +254,12 @@ def _http_post(url, payload, headers=None, timeout=180):
             pass
         raise ModelError(
             f"HTTP {e.code} ({url}). Yanıt: {detail}\n"
-            f"İpucu: model adı doğru mu? Çekili mi? ('ollama list' / 'ollama pull <model>')"
+            f"İpucu: model adı doğru/çekili mi? ('ollama list' / 'ollama pull <model>')"
         ) from None
     except urllib.error.URLError as e:
         raise ModelError(
             f"Bağlanılamadı: {url} ({e.reason}).\n"
-            f"İpucu: Ollama çalışıyor mu? Ayrı bir terminalde 'ollama serve'."
+            f"İpucu: Ollama çalışıyor mu? Ayrı terminalde 'ollama serve'."
         ) from None
 
 
