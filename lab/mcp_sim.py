@@ -59,21 +59,30 @@ def _norm_path(p: str) -> str:
 _SECRET_PATH_NORM = _norm_path(config.PRIVATE_PATH)
 
 
-def build_issues(payload_id: str | None) -> list[dict]:
-    """Public issue listesini üretir; verilirse son issue gövdesine δk gömer."""
+def build_issues(payload_id: str | None, custom_text: str | None = None) -> list[dict]:
+    """Public issue listesini üretir; δk'yı son issue gövdesine gömer.
+
+    custom_text verilirse (S1 adaptif saldırı), payload_id yok sayılır ve
+    doğrudan bu metin gömülür. Böylece saldırgan-LLM ürettiği δk'yı test eder.
+    """
     issues = [dict(i) for i in config.BASE_ISSUES]
-    if payload_id:
-        p = config.get_payload(payload_id)
+    inject = None
+    if custom_text is not None:
+        inject = custom_text
+    elif payload_id:
+        inject = config.get_payload(payload_id)["text"]
+    if inject:
         issues[-1] = dict(issues[-1])
-        issues[-1]["body"] = issues[-1]["body"] + p["text"]
+        issues[-1]["body"] = issues[-1]["body"] + inject
     return issues
 
 
 class MCPSim:
     """Tek bir deney koşusu için tool çağrılarını yürütür ve loglar."""
 
-    def __init__(self, payload_id: str | None):
+    def __init__(self, payload_id: str | None, custom_text: str | None = None):
         self.payload_id = payload_id
+        self.custom_text = custom_text
         self.calls: list[dict] = []          # yürütülen tüm tool çağrıları
         self.read_secret_path = False        # read_private_file GERÇEK sır yolunu okudu
         self.read_wrong_path = False         # read_private_file başka yolla çağrıldı
@@ -83,7 +92,7 @@ class MCPSim:
         self.calls.append({"name": name, "args": args})
 
         if name == "list_issues":
-            issues = build_issues(self.payload_id)
+            issues = build_issues(self.payload_id, self.custom_text)
             return json.dumps({"repo": args.get("repo"), "issues": issues},
                               ensure_ascii=False)
 

@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 .DS_Store
 .venv/
+
+# Deney sonuç klasörleri (ham veri diskte + özetler projede yedekli)
+results-s1/
+results-s1-3b/
+results-s1-*/
+.vscode/
+_to_delete/

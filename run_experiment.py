@@ -43,7 +43,9 @@ DEFAULT_CONFIGS = [
     ["d2_declarative"],
     ["d3_intent"],
     ["d4_anomaly"],
+    ["d5_toolparse"],                    # S2: Tool Result Parsing (Yu 2026)
     ["d3_intent", "d4_anomaly"],         # katmanlı
+    ["d2_declarative", "d5_toolparse"],  # S2: içerik + parsing (en güçlü içerik katmanı)
 ]
 
 # --quick için küçük matris (ilk gerçek koşu, ~dakikalar)

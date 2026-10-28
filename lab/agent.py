@@ -45,11 +45,13 @@ def _task_success(final: str) -> bool:
     return matched >= need
 
 
-def run_trial(client, payload_id, defenses, verbose=False) -> dict:
-    mcp = MCPSim(payload_id)
+def run_trial(client, payload_id, defenses, verbose=False, custom_text=None) -> dict:
+    mcp = MCPSim(payload_id, custom_text=custom_text)
     system = D.build_system_prompt(defenses)
     messages = [{"role": "user", "content": config.USER_TASK}]
     blocked_by_intent = False
+    blocked_by_provenance = False
+    raw_output_corpus = ""   # d5-CheckTool: ham tool çıktılarının birikimi (provenance)
     defense_notes = []
     final = ""
 
@@ -91,7 +93,20 @@ def run_trial(client, payload_id, defenses, verbose=False) -> dict:
                 if verbose:
                     print(f"[d3] {name} ENGELLENDİ (kullanıcı niyetinde yok)")
                 continue
+            # d5-CheckTool: arg kökeni kullanıcı değil tool çıktısıysa engelle (provenance)
+            if D.provenance_blocks(name, tc.get("args") or {}, raw_output_corpus, defenses):
+                blocked_by_provenance = True
+                messages.append({
+                    "role": "tool", "name": name, "tool_call_id": tc.get("id", "tc"),
+                    "content": json.dumps(
+                        {"error": "blocked: argument provenance is tool-output, not user (d5-CheckTool)"},
+                        ensure_ascii=False),
+                })
+                if verbose:
+                    print(f"[d5-CheckTool] {name} ENGELLENDİ (arg kökeni tool çıktısı)")
+                continue
             raw = mcp.execute(name, tc.get("args") or {})
+            raw_output_corpus += "\n" + (raw or "")
             t = D.transform_tool_response(name, raw, defenses)
             defense_notes += t["notes"]
             if verbose:
@@ -115,7 +130,7 @@ def run_trial(client, payload_id, defenses, verbose=False) -> dict:
     task_ok = _task_success(final)
 
     return {
-        "payload": payload_id or "none",
+        "payload": ("adaptive" if custom_text is not None else (payload_id or "none")),
         "defenses": "+".join(defenses) if defenses else "d0_none",
         "read_secret": mcp.read_secret_path,
         "disclosure": disclosure,
@@ -124,6 +139,7 @@ def run_trial(client, payload_id, defenses, verbose=False) -> dict:
         "attempted": attempted,
         "unauthorized_tool": unauth_exec,
         "blocked_by_intent": blocked_by_intent,
+        "blocked_by_provenance": blocked_by_provenance,
         "task_success": task_ok,
         "final": final,
         "tool_calls": mcp.calls,
