@@ -30,4 +30,4 @@
   görülmeli (tekrar kilidi kırıldı mı kontrolü).
 
 ## Çıktı
-Zaman damgalı klasörü silme; Claude analiz eder (payload çeşitliliği + aşama metrikleri).
+Zaman damgalı klasörü silme; sonuçlar sonradan analiz edilecek (payload çeşitliliği + aşama metrikleri).

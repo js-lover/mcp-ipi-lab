@@ -1,6 +1,6 @@
 # S2 KOŞUSU — Response-kanalı savunma değerlendirmesi (d5 dahil)
 
-Claude d5 (Tool Result Parsing) savunmasını ekledi ve mock ile doğruladı
+d5 (Tool Result Parsing) savunması eklendi ve mock ile doğrulandı
 (d5 tüm 7 payload'da enjeksiyonu düşürüyor, başlıkları koruyor; CheckTool provenance çalışıyor).
 Matris artık: d0, d1, d2, d3, d4, **d5**, d3+d4, **d2+d5** × 7 payload.
 
@@ -22,7 +22,7 @@ Ollama çalışıyor olmalı ve model inmiş olmalı:
 
 ## Çıktı
 results/summary.csv + results/trials.jsonl + results/run_meta.json
-Bu dosyaları bırak (klasörde kalsın) — Claude okuyup matris F/G/H + sunumu güncelleyecek.
+Bu dosyaları bırak (klasörde kalsın) — sonradan matris F/G/H + sunum güncellenecek.
 
 ## Beklenti (hipotez)
 - d0/d1/d3: propagation yüksek (içeriğe/response'a dokunmaz)

@@ -43,4 +43,4 @@ yeniden yükler (reload thrashing) → 2-3× yavaş + RAM baskısı. Sadece yete
 
 ## Çıktı
 Zaman damgalı klasörde summary.csv + sessions.jsonl + run_meta.json → klasörü
-sil(me), Claude analiz eder.
+sil(me), sonradan analiz edilir.

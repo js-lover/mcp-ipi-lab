@@ -2,7 +2,7 @@
 """GERÇEK MCP protokolü üzerinde IPI PoC (opsiyonel — sunum/demo için).
 
 Harness'teki süreç-içi simülasyonun gerçek MCP SDK karşılığı. P09 Şekil 11'i
-gerçek bir MCP host'unda (Claude Desktop, Cursor, MCP Inspector) göstermek için.
+gerçek bir MCP host'unda (Cursor, MCP Inspector vb.) göstermek için.
 Nicel ölçüm bunu GEREKTİRMEZ; süreç-içi simülasyonla yapılır.
 
 Dil kuralı: tool isim/açıklamaları (model-facing) İngilizce; yorumlar Türkçe.
